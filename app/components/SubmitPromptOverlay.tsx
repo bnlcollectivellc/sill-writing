@@ -112,7 +112,7 @@ export default function SubmitPromptOverlay({
           <h2 className="text-2xl font-medium">Submit a Prompt</h2>
 
           {/* Category Selection */}
-          <div className="flex flex-row justify-center gap-3 flex-wrap">
+          <div className="flex flex-col md:flex-row justify-center items-center gap-3 flex-wrap">
             {categories.map((category) => (
               <button
                 key={category}
