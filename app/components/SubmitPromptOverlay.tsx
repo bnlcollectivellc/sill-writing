@@ -133,7 +133,7 @@ export default function SubmitPromptOverlay({
             value={promptText}
             onChange={(e) => setPromptText(e.target.value)}
             placeholder="Write your prompt question..."
-            className={`w-full h-32 bg-transparent text-lg leading-relaxed resize-none focus:outline-none border-b ${borderColor} ${placeholderColor} pb-2`}
+            className={`w-full h-32 bg-transparent text-lg leading-relaxed resize-none focus:outline-none ${placeholderColor}`}
           />
 
           {/* Name Input (Optional) */}
