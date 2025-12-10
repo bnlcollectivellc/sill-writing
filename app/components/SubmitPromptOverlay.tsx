@@ -142,7 +142,7 @@ export default function SubmitPromptOverlay({
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="Your name (optional)"
-            className={`w-full bg-transparent text-base focus:outline-none border-b ${borderColor} ${placeholderColor} pb-2`}
+            className={`w-full bg-transparent text-base focus:outline-none ${placeholderColor}`}
           />
 
           {/* Submit Button */}
