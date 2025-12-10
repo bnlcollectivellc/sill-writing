@@ -14,8 +14,30 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Sill",
-  description: "A minimal writing prompt app for personal reflection",
+  title: "SillWriting",
+  description: "A quiet space for writing. Pick a prompt and reflect.",
+  openGraph: {
+    title: "SillWriting",
+    description: "A quiet space for writing. Pick a prompt and reflect.",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "SillWriting - Writing prompts",
+      },
+    ],
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "SillWriting",
+    description: "A quiet space for writing. Pick a prompt and reflect.",
+    images: ["/og-image.png"],
+  },
+  icons: {
+    icon: "/favicon.svg",
+  },
 };
 
 export default function RootLayout({
