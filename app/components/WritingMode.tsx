@@ -10,17 +10,20 @@ interface WritingModeProps {
   prompt: string;
   timeRemaining: number;
   isComplete: boolean;
+  isStopped: boolean;
   isPaused: boolean;
   text: string;
   isVisible: boolean;
   isAmbientMuted: boolean;
+  isDarkMode: boolean;
   onTextChange: (value: string) => void;
   onFocusChange: (isFocused: boolean) => void;
   onPauseResume: () => void;
   onReroll: () => void;
   onStop: () => void;
+  onResume: () => void;
+  onBack: () => void;
   onExport: () => void;
-  onNewPrompt: () => void;
   onToggleAmbient: () => void;
 }
 
@@ -28,58 +31,84 @@ export default function WritingMode({
   prompt,
   timeRemaining,
   isComplete,
+  isStopped,
   isPaused,
   text,
   isVisible,
   isAmbientMuted,
+  isDarkMode,
   onTextChange,
   onFocusChange,
   onPauseResume,
   onReroll,
   onStop,
+  onResume,
+  onBack,
   onExport,
-  onNewPrompt,
   onToggleAmbient,
 }: WritingModeProps) {
+  const showExport = isComplete || isStopped;
+  const borderColor = isDarkMode ? 'border-white' : 'border-black';
+  const hoverBg = isDarkMode ? 'hover:bg-white hover:text-black' : 'hover:bg-black hover:text-white';
+  const iconColor = isDarkMode ? 'text-gray-500 hover:text-white' : 'text-gray-400 hover:text-black';
+
   return (
     <div
       className={`flex flex-col items-center justify-center min-h-screen px-4 py-8 gap-8 transition-all duration-300 ease-out ${
         isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
       }`}
     >
-      <Timer timeRemaining={timeRemaining} isComplete={isComplete} />
+      {/* Back Button - Top Left */}
+      <button
+        onClick={onBack}
+        className={`fixed top-4 left-4 p-2 transition-colors ${iconColor}`}
+        aria-label="Back to categories"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M19 12H5M12 19l-7-7 7-7" />
+        </svg>
+      </button>
 
-      <PromptDisplay prompt={prompt} isComplete={isComplete} />
+      <Timer timeRemaining={timeRemaining} isComplete={isComplete || isStopped} isDarkMode={isDarkMode} />
+
+      <PromptDisplay prompt={prompt} isComplete={isComplete || isStopped} isDarkMode={isDarkMode} />
 
       <TextArea
         value={text}
         onChange={onTextChange}
         onFocusChange={onFocusChange}
+        isDarkMode={isDarkMode}
       />
 
       <ControlButtons
         isPaused={isPaused}
+        isStopped={isStopped}
+        isDarkMode={isDarkMode}
         onPauseResume={onPauseResume}
         onReroll={onReroll}
         onStop={onStop}
+        onResume={onResume}
       />
 
-      <div className="flex gap-4 items-center">
-        <ExportButton isVisible={isComplete} onExport={onExport} />
-        {isComplete && (
-          <button
-            onClick={onNewPrompt}
-            className="mt-4 px-6 py-2 text-sm font-medium border border-white rounded-full transition-all duration-300 ease-out hover:bg-white hover:text-black opacity-100"
-          >
-            New Prompt
-          </button>
-        )}
+      {/* Export Button - shows when stopped or complete */}
+      <div className={`flex gap-4 items-center transition-all duration-300 ${showExport ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+        <ExportButton isVisible={showExport} onExport={onExport} isDarkMode={isDarkMode} />
       </div>
 
-      {/* Ambient Sound Toggle */}
+      {/* Ambient Sound Toggle - Top Right */}
       <button
         onClick={onToggleAmbient}
-        className="fixed top-4 right-4 p-2 text-gray-500 hover:text-white transition-colors"
+        className={`fixed top-4 right-4 p-2 transition-colors ${iconColor}`}
         aria-label={isAmbientMuted ? 'Unmute ambient sound' : 'Mute ambient sound'}
       >
         {isAmbientMuted ? (

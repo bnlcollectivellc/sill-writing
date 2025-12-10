@@ -6,9 +6,10 @@ interface TextAreaProps {
   value: string;
   onChange: (value: string) => void;
   onFocusChange: (isFocused: boolean) => void;
+  isDarkMode: boolean;
 }
 
-export default function TextArea({ value, onChange, onFocusChange }: TextAreaProps) {
+export default function TextArea({ value, onChange, onFocusChange, isDarkMode }: TextAreaProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
@@ -16,6 +17,9 @@ export default function TextArea({ value, onChange, onFocusChange }: TextAreaPro
       textareaRef.current.focus();
     }
   }, []);
+
+  const textColor = isDarkMode ? 'text-white' : 'text-black';
+  const placeholderColor = isDarkMode ? 'placeholder-gray-600' : 'placeholder-gray-400';
 
   return (
     <textarea
@@ -25,7 +29,7 @@ export default function TextArea({ value, onChange, onFocusChange }: TextAreaPro
       onFocus={() => onFocusChange(true)}
       onBlur={() => onFocusChange(false)}
       placeholder="Start writing..."
-      className="w-full max-w-2xl h-64 md:h-80 bg-transparent text-white text-lg leading-relaxed resize-none focus:outline-none placeholder-gray-600"
+      className={`w-full max-w-2xl h-64 md:h-80 bg-transparent text-lg leading-relaxed resize-none focus:outline-none ${textColor} ${placeholderColor}`}
     />
   );
 }

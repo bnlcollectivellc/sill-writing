@@ -7,7 +7,7 @@ import { Category, prompts } from './lib/prompts';
 import { playChime, startAmbientSound, stopAmbientSound } from './lib/sounds';
 import { exportToPdf } from './lib/exportPdf';
 
-type AppState = 'landing' | 'writing' | 'complete';
+type AppState = 'landing' | 'writing' | 'complete' | 'stopped';
 
 const TIMER_DURATION = 10 * 60; // 10 minutes in seconds
 
@@ -23,6 +23,7 @@ export default function Home() {
   const [isLandingVisible, setIsLandingVisible] = useState(true);
   const [isWritingVisible, setIsWritingVisible] = useState(false);
   const [isAmbientMuted, setIsAmbientMuted] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(true);
 
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const hasPlayedChime = useRef(false);
@@ -77,7 +78,14 @@ export default function Home() {
   // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (appState !== 'writing' && appState !== 'complete') return;
+      // Escape always goes back to landing
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        handleBackToLanding();
+        return;
+      }
+
+      if (appState !== 'writing' && appState !== 'complete' && appState !== 'stopped') return;
       if (isTextAreaFocused) return;
 
       if (e.key === ' ' || e.code === 'Space') {
@@ -86,9 +94,6 @@ export default function Home() {
       } else if (e.key.toLowerCase() === 'r') {
         e.preventDefault();
         handleReroll();
-      } else if (e.key === 'Escape') {
-        e.preventDefault();
-        handleStop();
       }
     };
 
@@ -144,12 +149,25 @@ export default function Home() {
     setIsPaused(false);
     hasPlayedChime.current = false;
 
-    if (appState === 'complete') {
+    if (appState === 'complete' || appState === 'stopped') {
       setAppState('writing');
     }
   };
 
+  // Stop button - pauses and shows export, can resume
   const handleStop = () => {
+    setIsPaused(true);
+    setAppState('stopped');
+  };
+
+  // Resume from stopped state
+  const handleResume = () => {
+    setIsPaused(false);
+    setAppState('writing');
+  };
+
+  // Back to landing - full reset
+  const handleBackToLanding = () => {
     setIsWritingVisible(false);
     stopAmbientSound();
     setTimeout(() => {
@@ -173,10 +191,6 @@ export default function Home() {
     });
   };
 
-  const handleNewPrompt = () => {
-    handleStop();
-  };
-
   const handleToggleAmbient = () => {
     if (isAmbientMuted) {
       startAmbientSound();
@@ -186,44 +200,66 @@ export default function Home() {
     setIsAmbientMuted(!isAmbientMuted);
   };
 
+  const handleToggleTheme = () => {
+    setIsDarkMode(!isDarkMode);
+  };
+
+  const bgColor = isDarkMode ? 'bg-black' : 'bg-white';
+  const textColor = isDarkMode ? 'text-white' : 'text-black';
+
   return (
-    <main className="min-h-screen bg-black text-white">
+    <main className={`min-h-screen ${bgColor} ${textColor} transition-colors duration-300`}>
       {(appState === 'landing') && (
         <CategoryPills
           selectedCategory={selectedCategory}
           onSelectCategory={handleSelectCategory}
           onStart={handleStart}
           isVisible={isLandingVisible}
+          isDarkMode={isDarkMode}
         />
       )}
 
-      {(appState === 'writing' || appState === 'complete') && (
+      {(appState === 'writing' || appState === 'complete' || appState === 'stopped') && (
         <WritingMode
           prompt={currentPrompt}
           timeRemaining={timeRemaining}
           isComplete={appState === 'complete'}
+          isStopped={appState === 'stopped'}
           isPaused={isPaused}
           text={userText}
           isVisible={isWritingVisible}
           isAmbientMuted={isAmbientMuted}
+          isDarkMode={isDarkMode}
           onTextChange={setUserText}
           onFocusChange={setIsTextAreaFocused}
           onPauseResume={handlePauseResume}
           onReroll={handleReroll}
           onStop={handleStop}
+          onResume={handleResume}
+          onBack={handleBackToLanding}
           onExport={handleExport}
-          onNewPrompt={handleNewPrompt}
           onToggleAmbient={handleToggleAmbient}
         />
       )}
 
+      {/* Theme Toggle - Bottom Right */}
+      <button
+        onClick={handleToggleTheme}
+        className={`fixed bottom-4 right-4 w-10 h-10 rounded-full transition-colors duration-300 ${
+          isDarkMode ? 'bg-white' : 'bg-black'
+        }`}
+        aria-label={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+      />
+
       {/* Audio Credits */}
-      <footer className="fixed bottom-4 left-0 right-0 text-center">
+      <footer className="fixed bottom-4 left-0 right-0 text-center pointer-events-none">
         <a
           href="https://freesound.org/people/PatrickLieberkind/sounds/214334/"
           target="_blank"
           rel="noopener noreferrer"
-          className="text-xs text-gray-600 hover:text-gray-400 transition-colors"
+          className={`text-xs pointer-events-auto transition-colors ${
+            isDarkMode ? 'text-gray-600 hover:text-gray-400' : 'text-gray-400 hover:text-gray-600'
+          }`}
         >
           Ambient sound by PatrickLieberkind
         </a>
