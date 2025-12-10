@@ -69,7 +69,7 @@ export default function SubmitPromptOverlay({
   if (!isOpen) return null;
 
   return (
-    <div className={`fixed inset-0 ${bgColor} ${textColor} z-50 flex flex-col items-center justify-center p-4 transition-all duration-300`}>
+    <div className={`fixed inset-0 ${bgColor} ${textColor} z-50 flex flex-col items-center justify-center p-4 overflow-hidden transition-all duration-300`}>
       {/* Close Button */}
       <button
         onClick={handleClose}
@@ -112,7 +112,7 @@ export default function SubmitPromptOverlay({
           <h2 className="text-2xl font-medium">Submit a Prompt</h2>
 
           {/* Category Selection */}
-          <div className="flex flex-col md:flex-row justify-center items-center gap-3 flex-wrap">
+          <div className="flex flex-row justify-center items-center gap-3 flex-wrap">
             {categories.map((category) => (
               <button
                 key={category}

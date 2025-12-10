@@ -24,11 +24,11 @@ export default function CategoryPills({
 
   return (
     <div
-      className={`flex flex-col items-center justify-center min-h-screen transition-all duration-300 ease-out ${
+      className={`flex flex-col items-center justify-center h-screen overflow-hidden transition-all duration-300 ease-out ${
         isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-8'
       }`}
     >
-      <div className="flex flex-col md:flex-row justify-center items-center gap-3 px-4 md:overflow-x-auto max-w-full">
+      <div className="flex flex-col md:flex-row justify-center items-center gap-3 px-4 max-w-full">
         {categories.map((category) => (
           <button
             key={category}
