@@ -79,14 +79,19 @@ export default function Home() {
   // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Escape always goes back to landing
+      // Don't capture shortcuts when submit overlay is open (except Escape)
+      if (isSubmitOverlayOpen) {
+        if (e.key === 'Escape') {
+          e.preventDefault();
+          setIsSubmitOverlayOpen(false);
+        }
+        return;
+      }
+
+      // Escape goes back to landing
       if (e.key === 'Escape') {
         e.preventDefault();
-        if (isSubmitOverlayOpen) {
-          setIsSubmitOverlayOpen(false);
-        } else {
-          handleBackToLanding();
-        }
+        handleBackToLanding();
         return;
       }
 
