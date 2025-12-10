@@ -1,20 +1,16 @@
 'use client';
 
 interface ControlButtonsProps {
-  isPaused: boolean;
   isStopped: boolean;
   isDarkMode: boolean;
-  onPauseResume: () => void;
   onReroll: () => void;
   onStop: () => void;
   onResume: () => void;
 }
 
 export default function ControlButtons({
-  isPaused,
   isStopped,
   isDarkMode,
-  onPauseResume,
   onReroll,
   onStop,
   onResume,
@@ -23,32 +19,65 @@ export default function ControlButtons({
   const invertedBg = isDarkMode ? 'bg-white text-black hover:bg-gray-200' : 'bg-black text-white hover:bg-gray-800';
 
   return (
-    <div className="flex gap-6">
-      <button
-        onClick={onPauseResume}
-        className={`px-4 py-2 text-sm transition-colors duration-200 ${mutedColor}`}
-      >
-        {isPaused ? 'Resume' : 'Pause'}
-      </button>
+    <div className="flex gap-8 items-center">
+      {/* Reroll Button - Circular arrow */}
       <button
         onClick={onReroll}
-        className={`px-4 py-2 text-sm transition-colors duration-200 ${mutedColor}`}
+        className={`p-3 transition-colors duration-200 ${mutedColor}`}
+        aria-label="Reroll prompt"
       >
-        Reroll
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8" />
+          <path d="M21 3v5h-5" />
+        </svg>
       </button>
+
+      {/* Stop/Resume Button - Play/Stop icons */}
       {isStopped ? (
         <button
           onClick={onResume}
-          className={`px-4 py-2 text-sm rounded-full transition-colors duration-200 ${invertedBg}`}
+          className={`p-3 rounded-full transition-colors duration-200 ${invertedBg}`}
+          aria-label="Resume"
         >
-          Resume
+          {/* Play icon (triangle) */}
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+            stroke="none"
+          >
+            <polygon points="6 3 20 12 6 21 6 3" />
+          </svg>
         </button>
       ) : (
         <button
           onClick={onStop}
-          className={`px-4 py-2 text-sm transition-colors duration-200 ${mutedColor}`}
+          className={`p-3 transition-colors duration-200 ${mutedColor}`}
+          aria-label="Stop"
         >
-          Stop
+          {/* Stop icon (square) */}
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+            stroke="none"
+          >
+            <rect x="4" y="4" width="16" height="16" rx="2" />
+          </svg>
         </button>
       )}
     </div>

@@ -13,7 +13,22 @@ export const categories = [
 
 export type Category = (typeof categories)[number];
 
-export const prompts: Record<Category, string[]> = {
+export interface Prompt {
+  text: string;
+  credit?: string; // Optional: "Submitted by Name"
+}
+
+// Helper to create prompts - can be just a string or an object with credit
+type PromptInput = string | Prompt;
+
+function normalizePrompt(input: PromptInput): Prompt {
+  if (typeof input === "string") {
+    return { text: input };
+  }
+  return input;
+}
+
+const rawPrompts: Record<Category, PromptInput[]> = {
   Life: [
     "What does an ordinary Tuesday teach you about yourself?",
     "Describe the last moment you felt fully awake.",
@@ -135,3 +150,14 @@ export const prompts: Record<Category, string[]> = {
     "What would your life look like if you optimized for joy?",
   ],
 };
+
+// Export normalized prompts
+export const prompts: Record<Category, Prompt[]> = Object.fromEntries(
+  Object.entries(rawPrompts).map(([category, promptList]) => [
+    category,
+    promptList.map(normalizePrompt),
+  ])
+) as Record<Category, Prompt[]>;
+
+// Example of how to add a user-submitted prompt with credit:
+// { text: "Your prompt question here?", credit: "Submitted by Sarah M." }

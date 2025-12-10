@@ -8,17 +8,16 @@ import ExportButton from './ExportButton';
 
 interface WritingModeProps {
   prompt: string;
+  promptCredit?: string;
   timeRemaining: number;
   isComplete: boolean;
   isStopped: boolean;
-  isPaused: boolean;
   text: string;
   isVisible: boolean;
   isAmbientMuted: boolean;
   isDarkMode: boolean;
   onTextChange: (value: string) => void;
   onFocusChange: (isFocused: boolean) => void;
-  onPauseResume: () => void;
   onReroll: () => void;
   onStop: () => void;
   onResume: () => void;
@@ -29,17 +28,16 @@ interface WritingModeProps {
 
 export default function WritingMode({
   prompt,
+  promptCredit,
   timeRemaining,
   isComplete,
   isStopped,
-  isPaused,
   text,
   isVisible,
   isAmbientMuted,
   isDarkMode,
   onTextChange,
   onFocusChange,
-  onPauseResume,
   onReroll,
   onStop,
   onResume,
@@ -48,8 +46,6 @@ export default function WritingMode({
   onToggleAmbient,
 }: WritingModeProps) {
   const showExport = isComplete || isStopped;
-  const borderColor = isDarkMode ? 'border-white' : 'border-black';
-  const hoverBg = isDarkMode ? 'hover:bg-white hover:text-black' : 'hover:bg-black hover:text-white';
   const iconColor = isDarkMode ? 'text-gray-500 hover:text-white' : 'text-gray-400 hover:text-black';
 
   return (
@@ -81,7 +77,12 @@ export default function WritingMode({
 
       <Timer timeRemaining={timeRemaining} isComplete={isComplete || isStopped} isDarkMode={isDarkMode} />
 
-      <PromptDisplay prompt={prompt} isComplete={isComplete || isStopped} isDarkMode={isDarkMode} />
+      <PromptDisplay
+        prompt={prompt}
+        credit={promptCredit}
+        isComplete={isComplete || isStopped}
+        isDarkMode={isDarkMode}
+      />
 
       <TextArea
         value={text}
@@ -91,10 +92,8 @@ export default function WritingMode({
       />
 
       <ControlButtons
-        isPaused={isPaused}
         isStopped={isStopped}
         isDarkMode={isDarkMode}
-        onPauseResume={onPauseResume}
         onReroll={onReroll}
         onStop={onStop}
         onResume={onResume}

@@ -3,7 +3,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import CategoryPills from './components/CategoryPills';
 import WritingMode from './components/WritingMode';
-import { Category, prompts } from './lib/prompts';
+import SubmitPromptOverlay from './components/SubmitPromptOverlay';
+import { Category, Prompt, prompts } from './lib/prompts';
 import { playChime, startAmbientSound, stopAmbientSound } from './lib/sounds';
 import { exportToPdf } from './lib/exportPdf';
 
@@ -14,25 +15,25 @@ const TIMER_DURATION = 10 * 60; // 10 minutes in seconds
 export default function Home() {
   const [appState, setAppState] = useState<AppState>('landing');
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
-  const [currentPrompt, setCurrentPrompt] = useState<string>('');
+  const [currentPrompt, setCurrentPrompt] = useState<Prompt | null>(null);
   const [shownPrompts, setShownPrompts] = useState<Set<string>>(new Set());
   const [timeRemaining, setTimeRemaining] = useState(TIMER_DURATION);
-  const [isPaused, setIsPaused] = useState(false);
   const [userText, setUserText] = useState('');
   const [isTextAreaFocused, setIsTextAreaFocused] = useState(false);
   const [isLandingVisible, setIsLandingVisible] = useState(true);
   const [isWritingVisible, setIsWritingVisible] = useState(false);
   const [isAmbientMuted, setIsAmbientMuted] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(true);
+  const [isSubmitOverlayOpen, setIsSubmitOverlayOpen] = useState(false);
 
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const hasPlayedChime = useRef(false);
 
   // Get a random prompt that hasn't been shown yet
   const getRandomPrompt = useCallback(
-    (category: Category, currentShown: Set<string>): string => {
+    (category: Category, currentShown: Set<string>): Prompt => {
       const categoryPrompts = prompts[category];
-      const availablePrompts = categoryPrompts.filter((p) => !currentShown.has(p));
+      const availablePrompts = categoryPrompts.filter((p) => !currentShown.has(p.text));
 
       // If all prompts shown, reset and allow repeats
       if (availablePrompts.length === 0) {
@@ -48,7 +49,7 @@ export default function Home() {
 
   // Timer logic
   useEffect(() => {
-    if (appState === 'writing' && !isPaused && timeRemaining > 0) {
+    if (appState === 'writing' && timeRemaining > 0) {
       timerRef.current = setInterval(() => {
         setTimeRemaining((prev) => {
           if (prev <= 1) {
@@ -65,7 +66,7 @@ export default function Home() {
         clearInterval(timerRef.current);
       }
     };
-  }, [appState, isPaused, timeRemaining]);
+  }, [appState, timeRemaining]);
 
   // Play chime when timer completes
   useEffect(() => {
@@ -81,7 +82,11 @@ export default function Home() {
       // Escape always goes back to landing
       if (e.key === 'Escape') {
         e.preventDefault();
-        handleBackToLanding();
+        if (isSubmitOverlayOpen) {
+          setIsSubmitOverlayOpen(false);
+        } else {
+          handleBackToLanding();
+        }
         return;
       }
 
@@ -90,7 +95,12 @@ export default function Home() {
 
       if (e.key === ' ' || e.code === 'Space') {
         e.preventDefault();
-        handlePauseResume();
+        // Spacebar toggles stop/resume
+        if (appState === 'stopped') {
+          handleResume();
+        } else if (appState === 'writing') {
+          handleStop();
+        }
       } else if (e.key.toLowerCase() === 'r') {
         e.preventDefault();
         handleReroll();
@@ -99,7 +109,7 @@ export default function Home() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [appState, isTextAreaFocused, selectedCategory, shownPrompts]);
+  }, [appState, isTextAreaFocused, selectedCategory, shownPrompts, isSubmitOverlayOpen]);
 
   const handleSelectCategory = (category: Category) => {
     setSelectedCategory(category);
@@ -110,7 +120,7 @@ export default function Home() {
 
     const prompt = getRandomPrompt(selectedCategory, shownPrompts);
     setCurrentPrompt(prompt);
-    setShownPrompts((prev) => new Set([...prev, prompt]));
+    setShownPrompts((prev) => new Set([...prev, prompt.text]));
 
     // Start ambient sound
     if (!isAmbientMuted) {
@@ -123,10 +133,6 @@ export default function Home() {
       setAppState('writing');
       setIsWritingVisible(true);
     }, 300);
-  };
-
-  const handlePauseResume = () => {
-    setIsPaused((prev) => !prev);
   };
 
   const handleReroll = () => {
@@ -144,9 +150,8 @@ export default function Home() {
 
     const newPrompt = getRandomPrompt(selectedCategory, newShownPrompts);
     setCurrentPrompt(newPrompt);
-    setShownPrompts((prev) => new Set([...prev, newPrompt]));
+    setShownPrompts((prev) => new Set([...prev, newPrompt.text]));
     setTimeRemaining(TIMER_DURATION);
-    setIsPaused(false);
     hasPlayedChime.current = false;
 
     if (appState === 'complete' || appState === 'stopped') {
@@ -154,15 +159,13 @@ export default function Home() {
     }
   };
 
-  // Stop button - pauses and shows export, can resume
+  // Stop button - pauses timer, shows export
   const handleStop = () => {
-    setIsPaused(true);
     setAppState('stopped');
   };
 
   // Resume from stopped state
   const handleResume = () => {
-    setIsPaused(false);
     setAppState('writing');
   };
 
@@ -173,9 +176,8 @@ export default function Home() {
     setTimeout(() => {
       setAppState('landing');
       setSelectedCategory(null);
-      setCurrentPrompt('');
+      setCurrentPrompt(null);
       setTimeRemaining(TIMER_DURATION);
-      setIsPaused(false);
       setUserText('');
       hasPlayedChime.current = false;
       setIsLandingVisible(true);
@@ -183,10 +185,10 @@ export default function Home() {
   };
 
   const handleExport = () => {
-    if (!selectedCategory) return;
+    if (!selectedCategory || !currentPrompt) return;
     exportToPdf({
       category: selectedCategory,
-      prompt: currentPrompt,
+      prompt: currentPrompt.text,
       text: userText,
     });
   };
@@ -221,18 +223,17 @@ export default function Home() {
 
       {(appState === 'writing' || appState === 'complete' || appState === 'stopped') && (
         <WritingMode
-          prompt={currentPrompt}
+          prompt={currentPrompt?.text || ''}
+          promptCredit={currentPrompt?.credit}
           timeRemaining={timeRemaining}
           isComplete={appState === 'complete'}
           isStopped={appState === 'stopped'}
-          isPaused={isPaused}
           text={userText}
           isVisible={isWritingVisible}
           isAmbientMuted={isAmbientMuted}
           isDarkMode={isDarkMode}
           onTextChange={setUserText}
           onFocusChange={setIsTextAreaFocused}
-          onPauseResume={handlePauseResume}
           onReroll={handleReroll}
           onStop={handleStop}
           onResume={handleResume}
@@ -241,6 +242,23 @@ export default function Home() {
           onToggleAmbient={handleToggleAmbient}
         />
       )}
+
+      {/* Submit Prompt Overlay */}
+      <SubmitPromptOverlay
+        isOpen={isSubmitOverlayOpen}
+        isDarkMode={isDarkMode}
+        onClose={() => setIsSubmitOverlayOpen(false)}
+      />
+
+      {/* Submit Prompt Button - Bottom Left */}
+      <button
+        onClick={() => setIsSubmitOverlayOpen(true)}
+        className={`fixed bottom-4 left-4 text-xs transition-colors ${
+          isDarkMode ? 'text-gray-600 hover:text-gray-400' : 'text-gray-400 hover:text-gray-600'
+        }`}
+      >
+        Submit a prompt
+      </button>
 
       {/* Theme Toggle - Bottom Right */}
       <button

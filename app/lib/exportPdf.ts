@@ -60,17 +60,32 @@ export function exportToPdf({ category, prompt, text }: ExportData): void {
     yPosition += lineHeight;
   }
 
-  // Date at bottom
-  const date = new Date().toLocaleDateString('en-US', {
+  // Footer
+  const now = new Date();
+  const date = now.toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
   });
+
   doc.setFontSize(9);
   doc.setTextColor(150, 150, 150);
+
+  // Date at bottom left
   doc.text(date, margin, pageHeight - 15);
 
-  // Save the PDF
-  const filename = `sill-${category.toLowerCase()}-${Date.now()}.pdf`;
+  // SillWriting branding at bottom right
+  const brandText = 'SillWriting';
+  const brandWidth = doc.getTextWidth(brandText);
+  doc.text(brandText, pageWidth - margin - brandWidth, pageHeight - 15);
+
+  // Generate filename: sillwriting-category-dd.mm.yy-hh.mm.pdf
+  const day = String(now.getDate()).padStart(2, '0');
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const year = String(now.getFullYear()).slice(-2);
+  const hours = String(now.getHours()).padStart(2, '0');
+  const minutes = String(now.getMinutes()).padStart(2, '0');
+
+  const filename = `sillwriting-${category.toLowerCase()}-${day}.${month}.${year}-${hours}.${minutes}.pdf`;
   doc.save(filename);
 }
